@@ -1,0 +1,10 @@
+## Interface: 120000
+## Title: Group iLevel Tooltip
+## Notes: Shows group iLevel list on hover
+## Author: Sanbr
+## Version: 1.2
+## IconTexture: 7549439
+## SavedVariables: GroupILvlTooltipDB
+## Category-enUS: User Interface
+
+GroupILvlTooltip.lua
