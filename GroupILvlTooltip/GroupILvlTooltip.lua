@@ -194,7 +194,7 @@ local function UpdateTooltip()
         if m.ilvl then
             GameTooltip:AddDoubleLine(
                 name,
-                string.format("|c%s%.1f|r",GetIlvlColor(m.ilvl),m.ilvl),
+                string.format("|c%s%d|r", GetIlvlColor(m.ilvl), math.floor(m.ilvl)),
                 r,g,b,1,1,1
             )
         elseif inCombat then
