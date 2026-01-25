@@ -57,7 +57,7 @@ local inspecting = nil
 local retries = {}
 
 local MAX_RETRIES = 6
-local SCAN_INTERVAL = 1.2
+local SCAN_INTERVAL = 2.5
 local inCombat = false
 
 -------------------------------------------------
@@ -240,22 +240,10 @@ end)
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 frame:RegisterEvent("GROUP_ROSTER_UPDATE")
 frame:RegisterEvent("INSPECT_READY")
-frame:RegisterEvent("PLAYER_REGEN_DISABLED")
-frame:RegisterEvent("PLAYER_REGEN_ENABLED")
 
 frame:SetScript("OnEvent", function(_,event)
     if event=="PLAYER_ENTERING_WORLD" then
         RestorePosition()
-    end
-
-    if event=="PLAYER_REGEN_DISABLED" then
-        inCombat = true
-        StopScanning()
-        return
-    elseif event=="PLAYER_REGEN_ENABLED" then
-        inCombat = false
-        StartScanning()
-        return
     end
 
     if event=="INSPECT_READY" and inspecting then
