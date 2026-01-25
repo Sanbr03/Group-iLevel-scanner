@@ -57,8 +57,7 @@ local inspecting = nil
 local retries = {}
 
 local MAX_RETRIES = 6
-local SCAN_INTERVAL = 2.5
-local inCombat = false
+local SCAN_INTERVAL = 3
 
 -------------------------------------------------
 -- Helpers
@@ -108,13 +107,12 @@ end
 -- Inspect Logic (combat-safe, no rescans)
 -------------------------------------------------
 local function CanSafelyInspect(unit)
-    return not inCombat
-        and not UnitIsDeadOrGhost(unit)
+    return not UnitIsDeadOrGhost(unit)
         and CanInspect(unit)
 end
 
 local function InspectNext()
-    if inCombat or inspecting or #inspectQueue == 0 then return end
+    if inspecting or #inspectQueue == 0 then return end
 
     local unit = table.remove(inspectQueue, 1)
     if not UnitExists(unit) then return end
@@ -135,7 +133,7 @@ end
 
 local scanTicker
 local function StartScanning()
-    if scanTicker or #inspectQueue == 0 or inCombat then return end
+    if scanTicker or #inspectQueue == 0 then return end
     scanTicker = C_Timer.NewTicker(SCAN_INTERVAL, InspectNext)
 end
 
@@ -196,12 +194,6 @@ local function UpdateTooltip()
                 name,
                 string.format("|c%s%d|r", GetIlvlColor(m.ilvl), math.floor(m.ilvl)),
                 r,g,b,1,1,1
-            )
-        elseif inCombat then
-            GameTooltip:AddDoubleLine(
-                name,
-                "Paused (Combat)",
-                r,g,b,1,0.5,0
             )
         elseif m.retries >= MAX_RETRIES then
             GameTooltip:AddDoubleLine(
