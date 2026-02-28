@@ -2,11 +2,12 @@
 ## Title: Group iLevel Tooltip
 ## Notes: Shows group iLevel list on hover
 ## Author: Sanbr
-## Version: 1.2.4
+## Version: 1.2.5
 ## IconTexture: 7549439
 ## SavedVariables: GroupILvlTooltipDB
 ## Category-enUS: User Interface
 
 GroupILvlTooltip.lua
+
 
 
