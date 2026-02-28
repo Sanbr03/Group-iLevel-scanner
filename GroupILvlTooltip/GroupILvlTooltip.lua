@@ -1,6 +1,6 @@
 local addonName = ...
 local frame = CreateFrame("Frame", addonName)
-
+local levelCache = {}
 -------------------------------------------------
 -- Saved Variables
 -------------------------------------------------
@@ -9,15 +9,15 @@ GroupILvlTooltipDB = GroupILvlTooltipDB or {}
 -------------------------------------------------
 -- Movable Icon Button
 -------------------------------------------------
-local button = CreateFrame("Button", addonName.."Button", UIParent)
-button:SetSize(32,32)
+local button = CreateFrame("Button", addonName .. "Button", UIParent)
+button:SetSize(32, 32)
 button:SetMovable(true)
 button:EnableMouse(true)
 button:RegisterForDrag("LeftButton")
 button:SetClampedToScreen(true)
-button:SetPoint("CENTER",UIParent,"CENTER",0,0)
+button:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
 
-local tex = button:CreateTexture(nil,"BACKGROUND")
+local tex = button:CreateTexture(nil, "BACKGROUND")
 tex:SetAllPoints()
 tex:SetTexture(7549439)
 button.texture = tex
@@ -26,7 +26,7 @@ button:Hide()
 button:SetScript("OnDragStart", function(self) self:StartMoving() end)
 button:SetScript("OnDragStop", function(self)
     self:StopMovingOrSizing()
-    local p,_,rp,x,y = self:GetPoint()
+    local p, _, rp, x, y = self:GetPoint()
     GroupILvlTooltipDB.point = p
     GroupILvlTooltipDB.relativePoint = rp
     GroupILvlTooltipDB.xOfs = x
@@ -44,7 +44,7 @@ local function RestorePosition()
             GroupILvlTooltipDB.yOfs
         )
     else
-        button:SetPoint("CENTER",UIParent,"CENTER",0,0)
+        button:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
     end
 end
 
@@ -63,21 +63,28 @@ local SCAN_INTERVAL = 3
 -- Helpers
 -------------------------------------------------
 local function GetClassColor(unit)
-    local _,class = UnitClass(unit)
+    local _, class = UnitClass(unit)
     if class and RAID_CLASS_COLORS[class] then
         local c = RAID_CLASS_COLORS[class]
-        return c.r,c.g,c.b
+        return c.r, c.g, c.b
     end
-    return 1,1,1
+    return 1, 1, 1
 end
 
 local function GetIlvlColor(ilvl)
-    if ilvl >= 147 then return "FFFF7700"
-    elseif ilvl >= 134 then return "FFDC00FF"
-    elseif ilvl >= 121 then return "FF0088FF"
-    elseif ilvl >= 108 then return "FF00FF00"
-    elseif ilvl >= 95 then return "FFFFFFFF"
-    else return "FFAAAAAA" end
+    if ilvl >= 147 then
+        return "FFFF7700"
+    elseif ilvl >= 134 then
+        return "FFDC00FF"
+    elseif ilvl >= 121 then
+        return "FF0088FF"
+    elseif ilvl >= 108 then
+        return "FF00FF00"
+    elseif ilvl >= 95 then
+        return "FFFFFFFF"
+    else
+        return "FFAAAAAA"
+    end
 end
 
 -------------------------------------------------
@@ -92,8 +99,8 @@ local function QueueInspects()
     local prefix = IsInRaid() and "raid" or "party"
     local num = GetNumGroupMembers()
 
-    for i=1,num do
-        local unit = (prefix=="party" and i==num and "player") or prefix..i
+    for i = 1, num do
+        local unit = (prefix == "party" and i == num and "player") or prefix .. i
         if UnitExists(unit) and unit ~= "player" then
             local guid = UnitGUID(unit)
             if guid and not ilvlCache[guid] then
@@ -148,13 +155,13 @@ end
 -- Tooltip
 -------------------------------------------------
 local function UpdateTooltip()
-    GameTooltip:SetOwner(button,"ANCHOR_RIGHT")
+    GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
     GameTooltip:ClearLines()
-    GameTooltip:AddLine("Group Item Levels",1,1,1)
+    GameTooltip:AddLine("Group Item Levels", 1, 1, 1)
     GameTooltip:AddLine(" ")
 
     if not IsInGroup() then
-        GameTooltip:AddLine("Not in a group",1,0,0)
+        GameTooltip:AddLine("Not in a group", 1, 0, 0)
         GameTooltip:Show()
         return
     end
@@ -163,49 +170,56 @@ local function UpdateTooltip()
     local prefix = IsInRaid() and "raid" or "party"
     local num = GetNumGroupMembers()
 
-    for i=1,num do
-        local unit = (prefix=="party" and i==num and "player") or prefix..i
+    for i = 1, num do
+        local unit = (prefix == "party" and i == num and "player") or prefix .. i
         if UnitExists(unit) then
             local guid = UnitGUID(unit)
-            table.insert(members,{
-                unit=unit,
-                name=UnitName(unit),
-                ilvl=ilvlCache[guid],
-                leader=UnitIsGroupLeader(unit),
-                retries=retries[guid] or 0
+            table.insert(members, {
+                unit = unit,
+                name = UnitName(unit),
+                ilvl = ilvlCache[guid],
+                level = UnitLevel(unit),
+                leader = UnitIsGroupLeader(unit),
+                retries = retries[guid] or 0
             })
         end
     end
 
-    table.sort(members,function(a,b)
+    table.sort(members, function(a, b)
         return (a.ilvl or 0) > (b.ilvl or 0)
     end)
 
-    for _,m in ipairs(members) do
-        local r,g,b = GetClassColor(m.unit)
+    for _, m in ipairs(members) do
+        local r, g, b = GetClassColor(m.unit)
         local name = m.name
 
         if m.leader then
-            name = "|TInterface\\GroupFrame\\UI-Group-LeaderIcon:14:14:0:-1|t "..name
+            name = "|TInterface\\GroupFrame\\UI-Group-LeaderIcon:14:14:0:-1|t " .. name
         end
 
         if m.ilvl then
+            local rightText = string.format("|c%s%d|r", GetIlvlColor(m.ilvl), math.floor(m.ilvl))
+
+            if m.level and m.level < 90 then
+                name = name .. " "..m.level
+            end
+
             GameTooltip:AddDoubleLine(
                 name,
-                string.format("|c%s%d|r", GetIlvlColor(m.ilvl), math.floor(m.ilvl)),
-                r,g,b,1,1,1
+                rightText,
+                r, g, b, 1, 1, 1
             )
         elseif m.retries >= MAX_RETRIES then
             GameTooltip:AddDoubleLine(
-                name.." |cffff5555(Unavailable)|r",
+                name .. " |cffff5555(Unavailable)|r",
                 "",
-                r,g,b,0.8,0.2,0.2
+                r, g, b, 0.8, 0.2, 0.2
             )
         else
             GameTooltip:AddDoubleLine(
-                name.." ("..m.retries..")",
+                name .. " (" .. m.retries .. ")",
                 "Scanning...",
-                r,g,b,0.7,0.7,0.7
+                r, g, b, 0.7, 0.7, 0.7
             )
         end
     end
@@ -233,12 +247,12 @@ frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 frame:RegisterEvent("GROUP_ROSTER_UPDATE")
 frame:RegisterEvent("INSPECT_READY")
 
-frame:SetScript("OnEvent", function(_,event)
-    if event=="PLAYER_ENTERING_WORLD" then
+frame:SetScript("OnEvent", function(_, event)
+    if event == "PLAYER_ENTERING_WORLD" then
         RestorePosition()
     end
 
-    if event=="INSPECT_READY" and inspecting then
+    if event == "INSPECT_READY" and inspecting then
         local guid = UnitGUID(inspecting)
         if not ilvlCache[guid] then
             local ilvl = C_PaperDollInfo.GetInspectItemLevel(inspecting)
@@ -254,7 +268,7 @@ frame:SetScript("OnEvent", function(_,event)
 
     if IsInGroup() then
         button:Show()
-        ilvlCache[UnitGUID("player")] = select(2,GetAverageItemLevel())
+        ilvlCache[UnitGUID("player")] = select(2, GetAverageItemLevel())
         QueueInspects()
         StartScanning()
     else
