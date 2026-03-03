@@ -1,10 +1,40 @@
 local addonName = ...
 local frame = CreateFrame("Frame", addonName)
-local levelCache = {}
+local settings
 -------------------------------------------------
 -- Saved Variables
 -------------------------------------------------
-GroupILvlTooltipDB = GroupILvlTooltipDB or {}
+local function InitializeDB()
+    if not GroupILvlTooltipDB then
+        GroupILvlTooltipDB = {}
+    end
+
+    if not GroupILvlTooltipDB.thresholds then
+        GroupILvlTooltipDB.thresholds = {}
+    end
+
+    if not GroupILvlTooltipDB.minimapPos then
+        GroupILvlTooltipDB.minimapPos = nil
+    end
+
+    if #GroupILvlTooltipDB.thresholds == 0 then
+        for i, v in ipairs(DEFAULT_THRESHOLDS) do
+            GroupILvlTooltipDB.thresholds[i] = { v[1], v[2], v[3] }
+        end
+    end
+end
+
+-------------------------------------------------
+-- Defaults
+-------------------------------------------------
+local DEFAULT_THRESHOLDS = {
+    { 272, "FFFF7700", "Orange" },
+    { 259, "FFDC00FF", "Purple" },
+    { 246, "FF0088FF", "Blue" },
+    { 233, "FF00FF00", "Green" },
+    { 220,  "FFFFFFFF", "White" },
+    { 0,   "FFAAAAAA", "Gray" },
+}
 
 -------------------------------------------------
 -- Movable Icon Button
@@ -72,19 +102,12 @@ local function GetClassColor(unit)
 end
 
 local function GetIlvlColor(ilvl)
-    if ilvl >= 147 then
-        return "FFFF7700"
-    elseif ilvl >= 134 then
-        return "FFDC00FF"
-    elseif ilvl >= 121 then
-        return "FF0088FF"
-    elseif ilvl >= 108 then
-        return "FF00FF00"
-    elseif ilvl >= 95 then
-        return "FFFFFFFF"
-    else
-        return "FFAAAAAA"
+    for _, data in ipairs(GroupILvlTooltipDB.thresholds) do
+        if ilvl >= data[1] then
+            return data[2]
+        end
     end
+    return "FFFFFFFF"
 end
 
 -------------------------------------------------
@@ -201,7 +224,7 @@ local function UpdateTooltip()
             local rightText = string.format("|c%s%d|r", GetIlvlColor(m.ilvl), math.floor(m.ilvl))
 
             if m.level and m.level < 90 then
-                name = name .. " "..m.level
+                name = name .. " " .. m.level
             end
 
             GameTooltip:AddDoubleLine(
@@ -240,14 +263,147 @@ button:SetScript("OnLeave", function()
     end
 end)
 
+
+-------------------------------------------------
+-- Settings Window
+-------------------------------------------------
+settings = CreateFrame("Frame", addonName.."Settings", UIParent, "BackdropTemplate")
+settings:SetSize(300,280)
+settings:SetPoint("CENTER")
+settings:SetFrameStrata("DIALOG")
+settings:SetToplevel(true)
+settings:EnableMouse(true)
+settings:SetMovable(true)
+settings:RegisterForDrag("LeftButton")
+settings:SetScript("OnDragStart", settings.StartMoving)
+settings:SetScript("OnDragStop", settings.StopMovingOrSizing)
+settings:Hide()
+
+settings:SetBackdrop({
+    bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+    edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+    tile = true, tileSize = 32, edgeSize = 32,
+    insets = { left=8, right=8, top=8, bottom=8 }
+})
+
+CreateFrame("Button", nil, settings, "UIPanelCloseButton"):SetPoint("TOPRIGHT")
+
+local title = settings:CreateFontString(nil,"OVERLAY","GameFontNormalLarge")
+title:SetPoint("TOP",0,-20)
+title:SetText("iLvl Thresholds")
+
+settings.inputs = {}
+
+local function BuildSettingsUI()
+
+    local labelX = 30      -- left column
+    local boxX   = 100     -- aligned edit box column
+    local startY = -50
+    local rowHeight = 30
+
+    for i, data in ipairs(GroupILvlTooltipDB.thresholds) do
+
+        if not settings.inputs[i] then
+
+            -- Label
+            local label = settings:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            label:SetPoint("TOPLEFT", labelX, startY - ((i-1) * rowHeight))
+            label:SetWidth(100)
+            label:SetJustifyH("LEFT")
+            label:SetText(data[3])
+
+            -- EditBox
+            local box = CreateFrame("EditBox", nil, settings, "InputBoxTemplate")
+            box:SetSize(60, 20)
+            box:SetPoint("TOPLEFT", boxX, startY - ((i-1) * rowHeight))
+            box:SetNumeric(true)
+            box:SetAutoFocus(false)
+
+            settings.inputs[i] = box
+        end
+
+        settings.inputs[i]:SetNumber(data[1])
+    end
+end
+
+local saveBtn = CreateFrame("Button", nil, settings, "UIPanelButtonTemplate")
+saveBtn:SetSize(100,22)
+saveBtn:SetPoint("BOTTOMLEFT",40,20)
+saveBtn:SetText("Save")
+
+saveBtn:SetScript("OnClick", function()
+    for i,box in ipairs(settings.inputs) do
+        GroupILvlTooltipDB.thresholds[i][1] = tonumber(box:GetText()) or 0
+    end
+    table.sort(GroupILvlTooltipDB.thresholds, function(a,b) return a[1] > b[1] end)
+    settings:Hide()
+end)
+
+local resetBtn = CreateFrame("Button", nil, settings, "UIPanelButtonTemplate")
+resetBtn:SetSize(100,22)
+resetBtn:SetPoint("LEFT", saveBtn, "RIGHT", 20, 0)
+resetBtn:SetText("Reset")
+
+resetBtn:SetScript("OnClick", function()
+    wipe(GroupILvlTooltipDB.thresholds)
+    for i,v in ipairs(DEFAULT_THRESHOLDS) do
+        GroupILvlTooltipDB.thresholds[i] = {v[1], v[2], v[3]}
+    end
+    BuildSettingsUI()
+end)
+
+
+function CreateMinimapButton()
+    local button = CreateFrame("Button", "CurrencyTrackerMinimapButton", Minimap)
+    button:SetSize(31, 31)
+    button:SetFrameStrata("MEDIUM")
+    button:SetPoint("TOPLEFT")
+    button:SetFrameLevel(8)
+
+    button.border = button:CreateTexture(nil, "OVERLAY")
+    button.border:SetSize(53, 53)
+    button.border:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
+    button.border:SetPoint("TOPLEFT")
+
+    button.icon = button:CreateTexture(nil, "ARTWORK")
+    button.icon:SetSize(17, 17)
+    button.icon:SetTexture(7549439)
+    button.icon:SetPoint("CENTER")
+    button.icon:SetTexCoord(0.05, 0.95, 0.05, 0.95)
+
+    button:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
+    button:SetScript("OnClick", function() settings:SetShown(not settings:IsShown()) end)
+
+    button:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+        GameTooltip:AddLine("Group Ilvl Scanner", 1, 0.82, 0)
+        GameTooltip:AddLine("|cff00ff00Click|r to open settings", 0.8, 0.8, 0.8)
+        GameTooltip:Show()
+    end)
+
+    button:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
+end
+
+
+
+
 -------------------------------------------------
 -- Events
 -------------------------------------------------
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 frame:RegisterEvent("GROUP_ROSTER_UPDATE")
 frame:RegisterEvent("INSPECT_READY")
+frame:RegisterEvent("ADDON_LOADED")
 
-frame:SetScript("OnEvent", function(_, event)
+frame:SetScript("OnEvent", function(_, event, arg1)
+    if event == "ADDON_LOADED" and arg1 == addonName then
+        InitializeDB()
+        BuildSettingsUI()
+        CreateMinimapButton()
+    end
+
     if event == "PLAYER_ENTERING_WORLD" then
         RestorePosition()
     end
