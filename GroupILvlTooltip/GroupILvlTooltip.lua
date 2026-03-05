@@ -1,6 +1,19 @@
 local addonName = ...
 local frame = CreateFrame("Frame", addonName)
 local settings
+
+-------------------------------------------------
+-- Defaults
+-------------------------------------------------
+local DEFAULT_THRESHOLDS = {
+    { 272, "FFFF7700", "Orange" },
+    { 259, "FFDC00FF", "Purple" },
+    { 246, "FF0088FF", "Blue" },
+    { 233, "FF00FF00", "Green" },
+    { 220,  "FFFFFFFF", "White" },
+    { 0,   "FFAAAAAA", "Gray" },
+}
+
 -------------------------------------------------
 -- Saved Variables
 -------------------------------------------------
@@ -23,18 +36,6 @@ local function InitializeDB()
         end
     end
 end
-
--------------------------------------------------
--- Defaults
--------------------------------------------------
-local DEFAULT_THRESHOLDS = {
-    { 272, "FFFF7700", "Orange" },
-    { 259, "FFDC00FF", "Purple" },
-    { 246, "FF0088FF", "Blue" },
-    { 233, "FF00FF00", "Green" },
-    { 220,  "FFFFFFFF", "White" },
-    { 0,   "FFAAAAAA", "Gray" },
-}
 
 -------------------------------------------------
 -- Movable Icon Button
