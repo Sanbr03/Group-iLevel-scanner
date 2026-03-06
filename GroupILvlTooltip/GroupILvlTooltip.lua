@@ -10,7 +10,7 @@ local DEFAULT_THRESHOLDS = {
     { 259, "FFDC00FF", "Purple" },
     { 246, "FF0088FF", "Blue" },
     { 233, "FF00FF00", "Green" },
-    { 220,  "FFFFFFFF", "White" },
+    { 220, "FFFFFFFF", "White" },
     { 0,   "FFAAAAAA", "Gray" },
 }
 
@@ -24,10 +24,6 @@ local function InitializeDB()
 
     if not GroupILvlTooltipDB.thresholds then
         GroupILvlTooltipDB.thresholds = {}
-    end
-
-    if not GroupILvlTooltipDB.minimapPos then
-        GroupILvlTooltipDB.minimapPos = nil
     end
 
     if #GroupILvlTooltipDB.thresholds == 0 then
@@ -87,7 +83,7 @@ local inspectQueue = {}
 local inspecting = nil
 local retries = {}
 
-local MAX_RETRIES = 6
+local MAX_RETRIES = 10
 local SCAN_INTERVAL = 3
 
 -------------------------------------------------
@@ -124,7 +120,14 @@ local function QueueInspects()
     local num = GetNumGroupMembers()
 
     for i = 1, num do
-        local unit = (prefix == "party" and i == num and "player") or prefix .. i
+        local unit
+
+        if IsInRaid() then
+            unit = "raid" .. i
+        else
+            unit = (i == num) and "player" or "party" .. i
+        end
+
         if UnitExists(unit) and unit ~= "player" then
             local guid = UnitGUID(unit)
             if guid and not ilvlCache[guid] then
@@ -152,13 +155,13 @@ local function InspectNext()
     if ilvlCache[guid] then return end
 
     retries[guid] = (retries[guid] or 0) + 1
-    if retries[guid] > MAX_RETRIES then return end
-
-    if CanSafelyInspect(unit) then
-        inspecting = unit
-        NotifyInspect(unit)
-    else
-        table.insert(inspectQueue, unit)
+    if retries[guid] <= MAX_RETRIES then
+        if CanSafelyInspect(unit) then
+            inspecting = unit
+            NotifyInspect(unit)
+        else
+            table.insert(inspectQueue, unit)
+        end
     end
 end
 
@@ -195,7 +198,14 @@ local function UpdateTooltip()
     local num = GetNumGroupMembers()
 
     for i = 1, num do
-        local unit = (prefix == "party" and i == num and "player") or prefix .. i
+        local unit
+
+        if IsInRaid() then
+            unit = "raid" .. i
+        else
+            unit = (i == num) and "player" or "party" .. i
+        end
+
         if UnitExists(unit) then
             local guid = UnitGUID(unit)
             table.insert(members, {
@@ -224,7 +234,7 @@ local function UpdateTooltip()
         if m.ilvl then
             local rightText = string.format("|c%s%d|r", GetIlvlColor(m.ilvl), math.floor(m.ilvl))
 
-            if m.level and m.level < 90 then
+            if m.level and m.level < GetMaxPlayerLevel() then
                 name = name .. " " .. m.level
             end
 
@@ -251,25 +261,35 @@ local function UpdateTooltip()
     GameTooltip:Show()
 end
 
-button:SetScript("OnEnter", function()
-    UpdateTooltip()
-    button.tooltipTicker = C_Timer.NewTicker(0.25, UpdateTooltip)
-end)
-
-button:SetScript("OnLeave", function()
-    GameTooltip:Hide()
+local function gcToolTip()
     if button.tooltipTicker then
         button.tooltipTicker:Cancel()
         button.tooltipTicker = nil
     end
+end
+
+button:SetScript("OnEnter", function()
+    UpdateTooltip()
+    button.tooltipTicker = C_Timer.NewTicker(0.5, UpdateTooltip)
 end)
+
+button:SetScript("OnHide", function()
+    gcToolTip()
+end)
+
+button:SetScript("OnLeave", function()
+    GameTooltip:Hide()
+    gcToolTip()
+end)
+
+
 
 
 -------------------------------------------------
 -- Settings Window
 -------------------------------------------------
-settings = CreateFrame("Frame", addonName.."Settings", UIParent, "BackdropTemplate")
-settings:SetSize(300,280)
+settings = CreateFrame("Frame", addonName .. "Settings", UIParent, "BackdropTemplate")
+settings:SetSize(300, 280)
 settings:SetPoint("CENTER")
 settings:SetFrameStrata("DIALOG")
 settings:SetToplevel(true)
@@ -283,32 +303,31 @@ settings:Hide()
 settings:SetBackdrop({
     bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
     edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-    tile = true, tileSize = 32, edgeSize = 32,
-    insets = { left=8, right=8, top=8, bottom=8 }
+    tile = true,
+    tileSize = 32,
+    edgeSize = 32,
+    insets = { left = 8, right = 8, top = 8, bottom = 8 }
 })
 
 CreateFrame("Button", nil, settings, "UIPanelCloseButton"):SetPoint("TOPRIGHT")
 
-local title = settings:CreateFontString(nil,"OVERLAY","GameFontNormalLarge")
-title:SetPoint("TOP",0,-20)
+local title = settings:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+title:SetPoint("TOP", 0, -20)
 title:SetText("iLvl Thresholds")
 
 settings.inputs = {}
 
 local function BuildSettingsUI()
-
-    local labelX = 30      -- left column
-    local boxX   = 100     -- aligned edit box column
-    local startY = -50
+    local labelX    = 30  -- left column
+    local boxX      = 100 -- aligned edit box column
+    local startY    = -50
     local rowHeight = 30
 
     for i, data in ipairs(GroupILvlTooltipDB.thresholds) do
-
         if not settings.inputs[i] then
-
             -- Label
             local label = settings:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            label:SetPoint("TOPLEFT", labelX, startY - ((i-1) * rowHeight))
+            label:SetPoint("TOPLEFT", labelX, startY - ((i - 1) * rowHeight))
             label:SetWidth(100)
             label:SetJustifyH("LEFT")
             label:SetText(data[3])
@@ -316,7 +335,7 @@ local function BuildSettingsUI()
             -- EditBox
             local box = CreateFrame("EditBox", nil, settings, "InputBoxTemplate")
             box:SetSize(60, 20)
-            box:SetPoint("TOPLEFT", boxX, startY - ((i-1) * rowHeight))
+            box:SetPoint("TOPLEFT", boxX, startY - ((i - 1) * rowHeight))
             box:SetNumeric(true)
             box:SetAutoFocus(false)
 
@@ -328,34 +347,34 @@ local function BuildSettingsUI()
 end
 
 local saveBtn = CreateFrame("Button", nil, settings, "UIPanelButtonTemplate")
-saveBtn:SetSize(100,22)
-saveBtn:SetPoint("BOTTOMLEFT",40,20)
+saveBtn:SetSize(100, 22)
+saveBtn:SetPoint("BOTTOMLEFT", 40, 20)
 saveBtn:SetText("Save")
 
 saveBtn:SetScript("OnClick", function()
-    for i,box in ipairs(settings.inputs) do
+    for i, box in ipairs(settings.inputs) do
         GroupILvlTooltipDB.thresholds[i][1] = tonumber(box:GetText()) or 0
     end
-    table.sort(GroupILvlTooltipDB.thresholds, function(a,b) return a[1] > b[1] end)
+    table.sort(GroupILvlTooltipDB.thresholds, function(a, b) return a[1] > b[1] end)
     settings:Hide()
 end)
 
 local resetBtn = CreateFrame("Button", nil, settings, "UIPanelButtonTemplate")
-resetBtn:SetSize(100,22)
+resetBtn:SetSize(100, 22)
 resetBtn:SetPoint("LEFT", saveBtn, "RIGHT", 20, 0)
 resetBtn:SetText("Reset")
 
 resetBtn:SetScript("OnClick", function()
     wipe(GroupILvlTooltipDB.thresholds)
-    for i,v in ipairs(DEFAULT_THRESHOLDS) do
-        GroupILvlTooltipDB.thresholds[i] = {v[1], v[2], v[3]}
+    for i, v in ipairs(DEFAULT_THRESHOLDS) do
+        GroupILvlTooltipDB.thresholds[i] = { v[1], v[2], v[3] }
     end
     BuildSettingsUI()
 end)
 
 
 function CreateMinimapButton()
-    local button = CreateFrame("Button", "CurrencyTrackerMinimapButton", Minimap)
+    local button = CreateFrame("Button", "GroupIlvlMinimapButton", Minimap)
     button:SetSize(31, 31)
     button:SetFrameStrata("MEDIUM")
     button:SetPoint("TOPLEFT")
@@ -387,9 +406,6 @@ function CreateMinimapButton()
     end)
 end
 
-
-
-
 -------------------------------------------------
 -- Events
 -------------------------------------------------
@@ -410,11 +426,17 @@ frame:SetScript("OnEvent", function(_, event, arg1)
     end
 
     if event == "INSPECT_READY" and inspecting then
-        local guid = UnitGUID(inspecting)
-        if not ilvlCache[guid] then
-            local ilvl = C_PaperDollInfo.GetInspectItemLevel(inspecting)
-            if ilvl and ilvl > 0 then
-                ilvlCache[guid] = ilvl
+        local guid = arg1
+
+        if UnitGUID(inspecting) == guid then
+            if not ilvlCache[guid] then
+                local ilvl = C_PaperDollInfo.GetInspectItemLevel(inspecting)
+                if ilvl and ilvl > 0 then
+                    ilvlCache[guid] = ilvl
+                else
+                    -- requeue inspect
+                    table.insert(inspectQueue, inspecting)
+                end
             end
         end
         ClearInspectPlayer()
