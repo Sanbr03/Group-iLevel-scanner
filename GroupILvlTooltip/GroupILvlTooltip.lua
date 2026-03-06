@@ -322,7 +322,7 @@ local function BuildSettingsUI()
     local rowHeight = 30
     local startY = -50
     local boxWidth = 60
-    local spacing = 20 -- space between label and textbox
+    local spacing = 60 -- space between label and textbox
     local inputs = settings.inputs
 
     -- define the X position for the textbox column (centered in window)
@@ -335,7 +335,7 @@ local function BuildSettingsUI()
         -- Create label and box if not exists
         if not inputs[i] then
             local label = settings:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            label:SetJustifyH("RIGHT") -- right-align so text hugs the box
+            label:SetJustifyH("LEFT") -- right-align so text hugs the box
 
             local box = CreateFrame("EditBox", nil, settings, "InputBoxTemplate")
             box:SetSize(boxWidth, 20)
@@ -361,7 +361,7 @@ local function BuildSettingsUI()
         box:SetNumber(data[1])
 
         -- Anchor the label to the left of the box with spacing
-        label:SetPoint("TOPRIGHT", box, "TOPLEFT", -spacing, 0)
+        label:SetPoint("TOPLEFT", box, "TOPLEFT", -spacing, 0)
     end
 end
 
