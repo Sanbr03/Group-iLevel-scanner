@@ -367,44 +367,14 @@ end
 
 
 
-
-
-local function BuildSettingsUI5()
-    local labelX    = 80  -- left column
-    local boxX      = 160 -- aligned edit box column
-    local startY    = -50
-    local rowHeight = 30
-
-    for i, data in ipairs(GroupILvlTooltipDB.thresholds) do
-        if not settings.inputs[i] then
-            -- Label
-            local label = settings:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            label:SetPoint("TOPLEFT", labelX, startY - ((i - 1) * rowHeight))
-            label:SetWidth(100)
-            label:SetJustifyH("LEFT")
-            label:SetText(data[3])
-
-            -- EditBox
-            local box = CreateFrame("EditBox", nil, settings, "InputBoxTemplate")
-            box:SetSize(60, 20)
-            box:SetPoint("TOPLEFT", boxX, startY - ((i - 1) * rowHeight))
-            box:SetNumeric(true)
-            box:SetAutoFocus(false)
-
-            settings.inputs[i] = box
-        end
-
-        settings.inputs[i]:SetNumber(data[1])
-    end
-end
-
 local saveBtn = CreateFrame("Button", nil, settings, "UIPanelButtonTemplate")
 saveBtn:SetSize(100, 22)
 saveBtn:SetPoint("BOTTOMLEFT", 40, 20)
 saveBtn:SetText("Save")
 
 saveBtn:SetScript("OnClick", function()
-    for i, box in ipairs(settings.inputs) do
+    for i, input in ipairs(settings.inputs) do
+        local box = input.box  -- get the actual EditBox
         GroupILvlTooltipDB.thresholds[i][1] = tonumber(box:GetText()) or 0
     end
     table.sort(GroupILvlTooltipDB.thresholds, function(a, b) return a[1] > b[1] end)
