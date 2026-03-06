@@ -317,9 +317,61 @@ title:SetText("iLvl Thresholds")
 
 settings.inputs = {}
 
+
 local function BuildSettingsUI()
-    local labelX    = 30  -- left column
-    local boxX      = 100 -- aligned edit box column
+    local rowHeight = 30
+    local startY = -50
+    local boxWidth = 60
+    local spacing = 20 -- space between label and textbox
+    local inputs = settings.inputs
+
+    -- define the X position for the textbox column (centered in window)
+    local windowWidth = settings:GetWidth()
+    local boxColumnX = windowWidth / 2  -- all boxes will start here
+
+    for i, data in ipairs(GroupILvlTooltipDB.thresholds) do
+        local rowY = startY - ((i - 1) * rowHeight)
+
+        -- Create label and box if not exists
+        if not inputs[i] then
+            local label = settings:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            label:SetJustifyH("RIGHT") -- right-align so text hugs the box
+
+            local box = CreateFrame("EditBox", nil, settings, "InputBoxTemplate")
+            box:SetSize(boxWidth, 20)
+            box:SetAutoFocus(false)
+            box:SetNumeric(true)
+
+            inputs[i] = { label = label, box = box }
+        end
+
+        local label = inputs[i].label
+        local box = inputs[i].box
+
+        -- Set label text and color
+        label:SetText(data[3])
+        local hex = data[2] or "FFFFFFFF"
+        local r = tonumber("0x"..hex:sub(3,4)) / 255
+        local g = tonumber("0x"..hex:sub(5,6)) / 255
+        local b = tonumber("0x"..hex:sub(7,8)) / 255
+        label:SetTextColor(r, g, b)
+
+        -- Anchor the textbox at fixed X column
+        box:SetPoint("TOPLEFT", settings, "TOPLEFT", boxColumnX, rowY)
+        box:SetNumber(data[1])
+
+        -- Anchor the label to the left of the box with spacing
+        label:SetPoint("TOPRIGHT", box, "TOPLEFT", -spacing, 0)
+    end
+end
+
+
+
+
+
+local function BuildSettingsUI5()
+    local labelX    = 80  -- left column
+    local boxX      = 160 -- aligned edit box column
     local startY    = -50
     local rowHeight = 30
 
