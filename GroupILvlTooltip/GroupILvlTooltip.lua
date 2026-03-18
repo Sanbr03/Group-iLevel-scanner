@@ -60,6 +60,7 @@ button:SetScript("OnDragStop", function(self)
     GroupILvlTooltipDB.yOfs = y
 end)
 
+
 local function RestorePosition()
     button:ClearAllPoints()
     if GroupILvlTooltipDB.point then
@@ -105,6 +106,20 @@ local function GetIlvlColor(ilvl)
         end
     end
     return "FFFFFFFF"
+end
+
+local function GetRoleIcon(unit)
+    local role = UnitGroupRolesAssigned(unit)
+
+    if role == "TANK" then
+        return "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES:14:14:0:0:64:64:0:19:22:41|t "
+    elseif role == "HEALER" then
+        return "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES:14:14:0:0:64:64:20:39:1:20|t "
+    elseif role == "DAMAGER" then
+        return "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES:14:14:0:0:64:64:20:39:22:41|t "
+    end
+
+    return ""
 end
 
 -------------------------------------------------
@@ -178,6 +193,22 @@ local function StopScanning()
     end
 end
 
+local function RescanGroup()
+    wipe(ilvlCache)
+    wipe(inspectQueue)
+    wipe(retries)
+    inspecting = nil
+
+    if IsInGroup() then
+        -- keep player's ilvl
+        ilvlCache[UnitGUID("player")] = select(2, GetAverageItemLevel())
+
+        QueueInspects()
+        StopScanning()
+        StartScanning()
+    end
+end
+
 -------------------------------------------------
 -- Tooltip
 -------------------------------------------------
@@ -230,6 +261,8 @@ local function UpdateTooltip()
         if m.leader then
             name = "|TInterface\\GroupFrame\\UI-Group-LeaderIcon:14:14:0:-1|t " .. name
         end
+
+        name = GetRoleIcon(m.unit) .. name
 
         if m.ilvl then
             local rightText = string.format("|c%s%d|r", GetIlvlColor(m.ilvl), math.floor(m.ilvl))
@@ -327,7 +360,7 @@ local function BuildSettingsUI()
 
     -- define the X position for the textbox column (centered in window)
     local windowWidth = settings:GetWidth()
-    local boxColumnX = windowWidth / 2  -- all boxes will start here
+    local boxColumnX = windowWidth / 2 -- all boxes will start here
 
     for i, data in ipairs(GroupILvlTooltipDB.thresholds) do
         local rowY = startY - ((i - 1) * rowHeight)
@@ -351,9 +384,9 @@ local function BuildSettingsUI()
         -- Set label text and color
         label:SetText(data[3])
         local hex = data[2] or "FFFFFFFF"
-        local r = tonumber("0x"..hex:sub(3,4)) / 255
-        local g = tonumber("0x"..hex:sub(5,6)) / 255
-        local b = tonumber("0x"..hex:sub(7,8)) / 255
+        local r = tonumber("0x" .. hex:sub(3, 4)) / 255
+        local g = tonumber("0x" .. hex:sub(5, 6)) / 255
+        local b = tonumber("0x" .. hex:sub(7, 8)) / 255
         label:SetTextColor(r, g, b)
 
         -- Anchor the textbox at fixed X column
@@ -368,13 +401,13 @@ end
 
 
 local saveBtn = CreateFrame("Button", nil, settings, "UIPanelButtonTemplate")
-saveBtn:SetSize(100, 22)
-saveBtn:SetPoint("BOTTOMLEFT", 40, 20)
+saveBtn:SetSize(70, 22)
+saveBtn:SetPoint("BOTTOMLEFT", 25, 20)
 saveBtn:SetText("Save")
 
 saveBtn:SetScript("OnClick", function()
     for i, input in ipairs(settings.inputs) do
-        local box = input.box  -- get the actual EditBox
+        local box = input.box -- get the actual EditBox
         GroupILvlTooltipDB.thresholds[i][1] = tonumber(box:GetText()) or 0
     end
     table.sort(GroupILvlTooltipDB.thresholds, function(a, b) return a[1] > b[1] end)
@@ -382,7 +415,7 @@ saveBtn:SetScript("OnClick", function()
 end)
 
 local resetBtn = CreateFrame("Button", nil, settings, "UIPanelButtonTemplate")
-resetBtn:SetSize(100, 22)
+resetBtn:SetSize(70, 22)
 resetBtn:SetPoint("LEFT", saveBtn, "RIGHT", 20, 0)
 resetBtn:SetText("Reset")
 
@@ -392,6 +425,16 @@ resetBtn:SetScript("OnClick", function()
         GroupILvlTooltipDB.thresholds[i] = { v[1], v[2], v[3] }
     end
     BuildSettingsUI()
+end)
+
+local debugBtn = CreateFrame("Button", nil, settings, "UIPanelButtonTemplate")
+debugBtn:SetSize(70, 22)
+debugBtn:SetPoint("LEFT", resetBtn, "RIGHT", 20, 0)
+debugBtn:SetText("ReScan")
+
+debugBtn:SetScript("OnClick", function()
+    RescanGroup()
+    UpdateTooltip()
 end)
 
 
