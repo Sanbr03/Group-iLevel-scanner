@@ -216,9 +216,8 @@ local function UpdateTooltip()
     GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
     GameTooltip:ClearLines()
     GameTooltip:AddLine("Group Item Levels", 1, 1, 1)
-    GameTooltip:AddLine(" ")
 
-    if not IsInGroup() then
+    if not IsInGroup() and not DEBUG_MODE then
         GameTooltip:AddLine("Not in a group", 1, 0, 0)
         GameTooltip:Show()
         return
@@ -249,6 +248,24 @@ local function UpdateTooltip()
             })
         end
     end
+
+    -------------------------------------------------
+    -- Calculate average ilvl
+    -------------------------------------------------
+    local total, count = 0, 0
+    for _, m in ipairs(members) do
+        if m.ilvl then
+            total = total + m.ilvl
+            count = count + 1
+        end
+    end
+
+    local avg = count > 0 and (total / count) or 0
+
+    -- Add avg to tooltip
+    GameTooltip:AddLine(string.format("Average iLvl: |cFFFFFFFF%.1f|r", avg), 0.7, 0.9, 1)
+    GameTooltip:AddLine(" ")
+
 
     table.sort(members, function(a, b)
         return (a.ilvl or 0) > (b.ilvl or 0)
@@ -314,9 +331,6 @@ button:SetScript("OnLeave", function()
     GameTooltip:Hide()
     gcToolTip()
 end)
-
-
-
 
 -------------------------------------------------
 -- Settings Window
@@ -398,8 +412,6 @@ local function BuildSettingsUI()
     end
 end
 
-
-
 local saveBtn = CreateFrame("Button", nil, settings, "UIPanelButtonTemplate")
 saveBtn:SetSize(70, 22)
 saveBtn:SetPoint("BOTTOMLEFT", 25, 20)
@@ -427,16 +439,14 @@ resetBtn:SetScript("OnClick", function()
     BuildSettingsUI()
 end)
 
-local debugBtn = CreateFrame("Button", nil, settings, "UIPanelButtonTemplate")
-debugBtn:SetSize(70, 22)
-debugBtn:SetPoint("LEFT", resetBtn, "RIGHT", 20, 0)
-debugBtn:SetText("ReScan")
-
-debugBtn:SetScript("OnClick", function()
+local ReScanBtn = CreateFrame("Button", nil, settings, "UIPanelButtonTemplate")
+ReScanBtn:SetSize(70, 22)
+ReScanBtn:SetPoint("LEFT", resetBtn, "RIGHT", 20, 0)
+ReScanBtn:SetText("ReScan")
+ReScanBtn:SetScript("OnClick", function()
     RescanGroup()
     UpdateTooltip()
 end)
-
 
 function CreateMinimapButton()
     local button = CreateFrame("Button", "GroupIlvlMinimapButton", Minimap)
