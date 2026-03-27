@@ -217,7 +217,7 @@ local function UpdateTooltip()
     GameTooltip:ClearLines()
     GameTooltip:AddLine("Group Item Levels", 1, 1, 1)
 
-    if not IsInGroup() and not DEBUG_MODE then
+    if not IsInGroup() then
         GameTooltip:AddLine("Not in a group", 1, 0, 0)
         GameTooltip:Show()
         return
@@ -406,6 +406,7 @@ local function BuildSettingsUI()
         -- Anchor the textbox at fixed X column
         box:SetPoint("TOPLEFT", settings, "TOPLEFT", boxColumnX, rowY)
         box:SetNumber(data[1])
+        box:SetTextColor(r, g, b)
 
         -- Anchor the label to the left of the box with spacing
         label:SetPoint("TOPLEFT", box, "TOPLEFT", -spacing, 0)
