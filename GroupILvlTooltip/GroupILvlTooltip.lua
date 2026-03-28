@@ -263,7 +263,7 @@ local function UpdateTooltip()
     local avg = count > 0 and (total / count) or 0
 
     -- Add avg to tooltip
-    GameTooltip:AddLine(string.format("Average iLvl: |cFFFFFFFF%.1f|r", avg), 0.7, 0.9, 1)
+    GameTooltip:AddLine(string.format("Average iLvl: |cFFFFFFFF%.1f|r (%d)", avg, count), 0.7, 0.9, 1)
     GameTooltip:AddLine(" ")
 
 
