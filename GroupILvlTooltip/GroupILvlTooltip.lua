@@ -112,14 +112,24 @@ local function GetRoleIcon(unit)
     local role = UnitGroupRolesAssigned(unit)
 
     if role == "TANK" then
-        return "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES:14:14:0:0:64:64:0:19:22:41|t "
+        return "|A:UI-LFG-RoleIcon-Tank-Micro:16:16|a "
     elseif role == "HEALER" then
-        return "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES:14:14:0:0:64:64:20:39:1:20|t "
+        return "|A:UI-LFG-RoleIcon-Healer-Micro:16:16|a "
     elseif role == "DAMAGER" then
-        return "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES:14:14:0:0:64:64:20:39:22:41|t "
+        return "|A:UI-LFG-RoleIcon-DPS-Micro:16:16|a "
     end
 
     return ""
+
+    -- if role == "TANK" then
+    --     return "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES:14:14:0:0:64:64:0:19:22:41|t "
+    -- elseif role == "HEALER" then
+    --     return "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES:14:14:0:0:64:64:20:39:1:20|t "
+    -- elseif role == "DAMAGER" then
+    --     return "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES:14:14:0:0:64:64:20:39:22:41|t "
+    -- end
+
+    -- return ""
 end
 
 -------------------------------------------------
