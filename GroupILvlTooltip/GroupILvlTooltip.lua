@@ -141,7 +141,6 @@ local function QueueInspects()
 
     if not IsInGroup() then return end
 
-    local prefix = IsInRaid() and "raid" or "party"
     local num = GetNumGroupMembers()
 
     for i = 1, num do
@@ -234,7 +233,6 @@ local function UpdateTooltip()
     end
 
     local members = {}
-    local prefix = IsInRaid() and "raid" or "party"
     local num = GetNumGroupMembers()
 
     for i = 1, num do
@@ -273,7 +271,8 @@ local function UpdateTooltip()
     local avg = count > 0 and (total / count) or 0
 
     -- Add avg to tooltip
-    GameTooltip:AddLine(string.format("Average iLvl: |cFFFFFFFF%.1f|r (%d)", avg, count), 0.7, 0.9, 1)
+    local avgColor = GetIlvlColor(avg)
+    GameTooltip:AddLine(string.format("Average iLvl: (%d) |c%s%.1f|r", count, avgColor, avg), 0.7, 0.9, 1)
     GameTooltip:AddLine(" ")
 
 
