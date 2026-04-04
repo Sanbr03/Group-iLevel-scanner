@@ -2,6 +2,9 @@ local addonName = ...
 local frame = CreateFrame("Frame", addonName)
 local settings
 
+local TankIcon = "|A:UI-LFG-RoleIcon-Tank-Micro:16:16|a "
+local HealerIcon = "|A:UI-LFG-RoleIcon-Healer-Micro:16:16|a "
+local DPSIcon = "|A:UI-LFG-RoleIcon-DPS-Micro:16:16|a "
 -------------------------------------------------
 -- Defaults
 -------------------------------------------------
@@ -112,24 +115,14 @@ local function GetRoleIcon(unit)
     local role = UnitGroupRolesAssigned(unit)
 
     if role == "TANK" then
-        return "|A:UI-LFG-RoleIcon-Tank-Micro:16:16|a "
+        return TankIcon
     elseif role == "HEALER" then
-        return "|A:UI-LFG-RoleIcon-Healer-Micro:16:16|a "
+        return HealerIcon
     elseif role == "DAMAGER" then
-        return "|A:UI-LFG-RoleIcon-DPS-Micro:16:16|a "
+        return DPSIcon
     end
 
     return ""
-
-    -- if role == "TANK" then
-    --     return "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES:14:14:0:0:64:64:0:19:22:41|t "
-    -- elseif role == "HEALER" then
-    --     return "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES:14:14:0:0:64:64:20:39:1:20|t "
-    -- elseif role == "DAMAGER" then
-    --     return "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES:14:14:0:0:64:64:20:39:22:41|t "
-    -- end
-
-    -- return ""
 end
 
 -------------------------------------------------
@@ -234,6 +227,11 @@ local function UpdateTooltip()
 
     local members = {}
     local num = GetNumGroupMembers()
+    local roleCounts = {
+        TANK = 0,
+        HEALER = 0,
+        DAMAGER = 0,
+    }
 
     for i = 1, num do
         local unit
@@ -254,6 +252,11 @@ local function UpdateTooltip()
                 leader = UnitIsGroupLeader(unit),
                 retries = retries[guid] or 0
             })
+
+            local role = UnitGroupRolesAssigned(unit)
+            if roleCounts[role] ~= nil then
+                roleCounts[role] = roleCounts[role] + 1
+            end
         end
     end
 
@@ -273,6 +276,14 @@ local function UpdateTooltip()
     -- Add avg to tooltip
     local avgColor = GetIlvlColor(avg)
     GameTooltip:AddLine(string.format("Average iLvl: (%d) |c%s%.1f|r", count, avgColor, avg), 0.7, 0.9, 1)
+
+    GameTooltip:AddLine(string.format(
+        "%s %d   %s %d   %s %d",
+        TankIcon, roleCounts.TANK,
+        HealerIcon, roleCounts.HEALER,
+        DPSIcon, roleCounts.DAMAGER
+    ), 1, 1, 1)
+
     GameTooltip:AddLine(" ")
 
 
