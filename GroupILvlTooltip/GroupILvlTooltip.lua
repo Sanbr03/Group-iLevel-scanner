@@ -228,9 +228,9 @@ local function UpdateTooltip()
     local members = {}
     local num = GetNumGroupMembers()
     local roleCounts = {
-        TANK = 0,
-        HEALER = 0,
-        DAMAGER = 0,
+        TANK = { count = 0, total = 0 },
+        HEALER = { count = 0, total = 0 },
+        DAMAGER = { count = 0, total = 0 },
     }
 
     for i = 1, num do
@@ -254,8 +254,11 @@ local function UpdateTooltip()
             })
 
             local role = UnitGroupRolesAssigned(unit)
-            if roleCounts[role] ~= nil then
-                roleCounts[role] = roleCounts[role] + 1
+            if roleCounts[role] then
+                roleCounts[role].count = roleCounts[role].count + 1
+                if ilvlCache[guid] then
+                    roleCounts[role].total = roleCounts[role].total + ilvlCache[guid]
+                end
             end
         end
     end
@@ -277,11 +280,16 @@ local function UpdateTooltip()
     local avgColor = GetIlvlColor(avg)
     GameTooltip:AddLine(string.format("Average iLvl: (%d) |c%s%.1f|r", count, avgColor, avg), 0.7, 0.9, 1)
 
+    local dpsData = roleCounts.DAMAGER
+    local dpsAvg = dpsData.count > 0 and (dpsData.total / dpsData.count) or 0
+    local dpsColor = GetIlvlColor(dpsAvg)
+
     GameTooltip:AddLine(string.format(
-        "%s %d   %s %d   %s %d",
-        TankIcon, roleCounts.TANK,
-        HealerIcon, roleCounts.HEALER,
-        DPSIcon, roleCounts.DAMAGER
+        "%s %d   %s %d   %s %d (|c%s%.1f|r)",
+        TankIcon, roleCounts.TANK.count,
+        HealerIcon, roleCounts.HEALER.count,
+        DPSIcon, dpsData.count,
+        dpsColor, dpsAvg
     ), 1, 1, 1)
 
     GameTooltip:AddLine(" ")
