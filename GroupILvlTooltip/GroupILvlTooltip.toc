@@ -1,4 +1,4 @@
-## Interface: 120005
+## Interface: 120007
 ## Title: Group iLevel Tooltip
 ## Notes: Shows group iLevel list on hover
 ## Author: Sanbr
