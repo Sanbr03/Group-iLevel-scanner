@@ -9,6 +9,7 @@ local DPSIcon = "|A:UI-LFG-RoleIcon-DPS-Micro:16:16|a "
 -- Defaults
 -------------------------------------------------
 local DEFAULT_THRESHOLDS = {
+    { 285, "D5BC0000", "Red" },
     { 272, "FFFF7700", "Orange" },
     { 259, "FFDC00FF", "Purple" },
     { 246, "FF0088FF", "Blue" },
@@ -364,7 +365,7 @@ end)
 -- Settings Window
 -------------------------------------------------
 settings = CreateFrame("Frame", addonName .. "Settings", UIParent, "BackdropTemplate")
-settings:SetSize(300, 280)
+settings:SetSize(300, 320)
 settings:SetPoint("CENTER")
 settings:SetFrameStrata("DIALOG")
 settings:SetToplevel(true)
