@@ -364,7 +364,7 @@ end)
 -------------------------------------------------
 -- Settings Window
 -------------------------------------------------
-settings = CreateFrame("Frame", addonName .. "Settings", UIParent, "BackdropTemplate")
+settings = CreateFrame("Frame", addonName .. "Settings", UIParent, "ButtonFrameTemplate")
 settings:SetSize(300, 320)
 settings:SetPoint("CENTER")
 settings:SetFrameStrata("DIALOG")
@@ -376,33 +376,26 @@ settings:SetScript("OnDragStart", settings.StartMoving)
 settings:SetScript("OnDragStop", settings.StopMovingOrSizing)
 settings:Hide()
 
-settings:SetBackdrop({
-    bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
-    edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-    tile = true,
-    tileSize = 32,
-    edgeSize = 32,
-    insets = { left = 8, right = 8, top = 8, bottom = 8 }
-})
+--ButtonFrameTemplate_HidePortrait(settings)
+settings:SetPortraitTextureRaw(7549439)
+settings:SetTitle("Group Ilvl thresholds")
 
-CreateFrame("Button", nil, settings, "UIPanelCloseButton"):SetPoint("TOPRIGHT")
+local content = settings.Inset or settings.Content
+content:SetPoint("TOPLEFT", 8, -28)
+content:SetPoint("BOTTOMRIGHT", -8, 8)
 
-local title = settings:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-title:SetPoint("TOP", 0, -20)
-title:SetText("iLvl Thresholds")
-
+settings.content = content
 settings.inputs = {}
-
 
 local function BuildSettingsUI()
     local rowHeight = 30
-    local startY = -50
+    local startY = -15
     local boxWidth = 60
     local spacing = 60 -- space between label and textbox
     local inputs = settings.inputs
 
     -- define the X position for the textbox column (centered in window)
-    local windowWidth = settings:GetWidth()
+    local windowWidth = settings.content:GetWidth()
     local boxColumnX = windowWidth / 2 -- all boxes will start here
 
     for i, data in ipairs(GroupILvlTooltipDB.thresholds) do
@@ -410,10 +403,10 @@ local function BuildSettingsUI()
 
         -- Create label and box if not exists
         if not inputs[i] then
-            local label = settings:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            local label = settings.content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             label:SetJustifyH("LEFT") -- right-align so text hugs the box
 
-            local box = CreateFrame("EditBox", nil, settings, "InputBoxTemplate")
+            local box = CreateFrame("EditBox", nil, settings.content, "InputBoxTemplate")
             box:SetSize(boxWidth, 20)
             box:SetAutoFocus(false)
             box:SetNumeric(true)
@@ -433,7 +426,7 @@ local function BuildSettingsUI()
         label:SetTextColor(r, g, b)
 
         -- Anchor the textbox at fixed X column
-        box:SetPoint("TOPLEFT", settings, "TOPLEFT", boxColumnX, rowY)
+        box:SetPoint("TOPLEFT", settings.content, "TOPLEFT", boxColumnX, rowY)
         box:SetNumber(data[1])
         box:SetTextColor(r, g, b)
 
@@ -442,9 +435,9 @@ local function BuildSettingsUI()
     end
 end
 
-local saveBtn = CreateFrame("Button", nil, settings, "UIPanelButtonTemplate")
+local saveBtn = CreateFrame("Button", nil, settings.content, "UIPanelButtonTemplate")
 saveBtn:SetSize(70, 22)
-saveBtn:SetPoint("BOTTOMLEFT", 25, 20)
+saveBtn:SetPoint("BOTTOMLEFT", 17, 20)
 saveBtn:SetText("Save")
 
 saveBtn:SetScript("OnClick", function()
@@ -456,7 +449,7 @@ saveBtn:SetScript("OnClick", function()
     settings:Hide()
 end)
 
-local resetBtn = CreateFrame("Button", nil, settings, "UIPanelButtonTemplate")
+local resetBtn = CreateFrame("Button", nil, settings.content, "UIPanelButtonTemplate")
 resetBtn:SetSize(70, 22)
 resetBtn:SetPoint("LEFT", saveBtn, "RIGHT", 20, 0)
 resetBtn:SetText("Reset")
@@ -469,7 +462,7 @@ resetBtn:SetScript("OnClick", function()
     BuildSettingsUI()
 end)
 
-local ReScanBtn = CreateFrame("Button", nil, settings, "UIPanelButtonTemplate")
+local ReScanBtn = CreateFrame("Button", nil, settings.content, "UIPanelButtonTemplate")
 ReScanBtn:SetSize(70, 22)
 ReScanBtn:SetPoint("LEFT", resetBtn, "RIGHT", 20, 0)
 ReScanBtn:SetText("ReScan")
