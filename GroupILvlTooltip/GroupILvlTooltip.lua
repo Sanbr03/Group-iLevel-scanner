@@ -9,12 +9,12 @@ local DPSIcon = "|A:UI-LFG-RoleIcon-DPS-Micro:16:16|a "
 -- Defaults
 -------------------------------------------------
 local DEFAULT_THRESHOLDS = {
-    { 285, "D5BC0000", "Red" },
-    { 272, "FFFF7700", "Orange" },
-    { 259, "FFDC00FF", "Purple" },
-    { 246, "FF0088FF", "Blue" },
-    { 233, "FF00FF00", "Green" },
-    { 220, "FFFFFFFF", "White" },
+    { 331, "D5BC0000", "Red" },
+    { 318, "FFFF7700", "Orange" },
+    { 305, "FFDC00FF", "Purple" },
+    { 292, "FF0088FF", "Blue" },
+    { 279, "FF00FF00", "Green" },
+    { 266, "FFFFFFFF", "White" },
     { 0,   "FFAAAAAA", "Gray" },
 }
 
