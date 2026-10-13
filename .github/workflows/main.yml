@@ -1,0 +1,30 @@
+name: Create Lua Release Artifact
+on:
+push: 
+branches: [ main ]
+
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required to create releases and upload assets
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Package Lua Artifact
+        run: |
+          mkdir -p dist
+          # Replace 'your-script.lua' with your actual Lua file path
+          cp your-script.lua dist/your-script-v${{ github.ref_name }}.lua
+
+      - name: Create Release and Upload Asset
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/*.lua
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
