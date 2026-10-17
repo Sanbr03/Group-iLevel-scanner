@@ -250,6 +250,7 @@ local function UpdateTooltip()
                 name = UnitName(unit),
                 ilvl = ilvlCache[guid],
                 level = UnitLevel(unit),
+                dead = UnitIsDeadOrGhost(unit),
                 leader = UnitIsGroupLeader(unit),
                 retries = retries[guid] or 0
             })
@@ -306,6 +307,10 @@ local function UpdateTooltip()
 
         if m.leader then
             name = "|TInterface\\GroupFrame\\UI-Group-LeaderIcon:14:14:0:-1|t " .. name
+        end
+
+        if m.dead then
+            name = name .. " |TInterface\\TargetingFrame\\UI-TargetingFrame-Skull:14:14|t"
         end
 
         name = GetRoleIcon(m.unit) .. name
