@@ -18,7 +18,7 @@ jobs:
       - name: Package addon
         id: package
         run: |
-         BASE_VERSION=$(sed -n 's/^## Version: *//p' GroupILvlTooltip.toc | head -n 1)
+         BASE_VERSION=$(sed -n 's/^## Version: *//p' GroupILvlTooltip/GroupILvlTooltip.toc | head -n 1)
           if [[ "$BASE_VERSION" =~ ^([0-9]+)\.([0-9]+)$ ]]; then
             VERSION="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"
           else
@@ -27,7 +27,7 @@ jobs:
           fi
 
           mkdir -p dist/GroupILvlTooltip
-          cp GroupILvlTooltip.lua GroupILvlTooltip.toc dist/GroupILvlTooltip/
+          cp GroupILvlTooltip/GroupILvlTooltip.lua GroupILvlTooltip/GroupILvlTooltip.toc dist/GroupILvlTooltip/
           sed -i "s/^## Version:.*/## Version: $VERSION/" dist/GroupILvlTooltip/GroupILvlTooltip.toc
           cd dist
           zip -r "GroupILvlTooltip-$VERSION.zip" GroupILvlTooltip
