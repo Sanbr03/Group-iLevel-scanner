@@ -18,7 +18,7 @@ jobs:
       - name: Package addon
         run: |
           mkdir -p dist/GroupILvlTooltip
-          cp GroupILvlTooltip.lua GroupILvlTooltip.toc dist/GroupILvlTooltip/
+          cp GroupILvlTooltip/GroupILvlTooltip.lua GroupILvlTooltip/GroupILvlTooltip.toc dist/GroupILvlTooltip/
           cd dist
           zip -r GroupILvlTooltip.zip GroupILvlTooltip
 
