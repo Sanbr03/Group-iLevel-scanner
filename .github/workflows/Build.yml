@@ -19,10 +19,10 @@ jobs:
         id: package
         run: |
           BASE_VERSION=$(sed -n 's/^## Version: *//p' GroupILvlTooltip/GroupILvlTooltip.toc | head -n 1)
-          if [[ "$BASE_VERSION" =~ ^([0-9]+)\.([0-9]+)\.[0-9]+$ ]]; then
+          if [[ "$BASE_VERSION" =~ ^([0-9]+)\.([0-9]+); then
             VERSION="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.${GITHUB_RUN_NUMBER}"
           else
-            echo "TOC version must use MAJOR.MINOR.PATCH; got '$BASE_VERSION'." >&2
+            echo "TOC version must use MAJOR.MINOR; got '$BASE_VERSION'." >&2
             exit 1
           fi
 
